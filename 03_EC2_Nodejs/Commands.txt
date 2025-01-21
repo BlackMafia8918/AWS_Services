@@ -15,7 +15,7 @@ touch server.js
 
 nano server.js
 
-nohup node server.js > output.log 2>&1 &
+nohop node server.js > output.log 
 
 cat output.log 
 
