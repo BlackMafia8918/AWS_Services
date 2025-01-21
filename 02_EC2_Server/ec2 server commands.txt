@@ -6,7 +6,6 @@ Launch Instances -> name : WebServer -> OS : Ubuntu -> 24.04 -> Instance Type ->
 
 chmod 777 -> 111 
 
-
 I want to run python program in EC2 machine
 
 sudo apt update && sudo apt upgrade -y
