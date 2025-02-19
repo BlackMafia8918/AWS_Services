@@ -1,0 +1,120 @@
+Step-by-Step Kubernetes Deployment on AWS EC2
+
+Using Docker Hub
+
+=> Build & Push Image to Docker Hub
+
+=> Login to Docker Hub
+
+docker login
+
+=> Create a Dockerfile
+
+FROM node:18
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+CMD ["node", "server.js"]
+
+=> Build Docker Image
+
+docker build -t your-dockerhub-username/node-k8s-app .
+
+=> Push Image to Docker Hub
+
+docker tag your-dockerhub-username/node-k8s-app your-dockerhub-username/node-k8s-app:latest
+docker push your-dockerhub-username/node-k8s-app:latest
+
+=> Deploy Node.js App to Kubernetes
+
+Create Deployment YAML (deployment.yaml)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-k8s-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+        - name: node-app
+          image: your-dockerhub-username/node-k8s-app:latest
+          ports:
+            - containerPort: 3000
+
+=> Apply Deployment
+
+kubectl apply -f deployment.yaml
+kubectl get pods
+
+=> Create Service YAML (service.yaml)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-k8s-service
+spec:
+  selector:
+    app: node-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
+
+=> Apply Service
+
+kubectl apply -f service.yaml
+kubectl get services
+
+=> Get External IP
+
+kubectl get svc node-k8s-service
+
+=> Scaling & Monitoring
+=> Scale the App
+
+kubectl scale deployment node-k8s-app --replicas=4
+kubectl get pods
+
+=> Check Logs
+kubectl logs -f <POD_NAME>
+
+=> Check Resource Usage
+kubectl top pods
+
+=> Configure Ingress (Optional)
+=> Enable Ingress
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+=> Create Ingress (ingress.yaml)
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: node-app-ingress
+spec:
+  rules:
+    - host: your-domain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: node-k8s-service
+                port:
+                  number: 80
+
+=> Apply & Configure Domain
+kubectl apply -f ingress.yaml
+

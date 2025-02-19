@@ -1,0 +1,138 @@
+=> Create Docker Image & Push to AWS ECR
+
+Login to AWS CLI
+
+sudo apt update
+sudo apt install unzip curl
+
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+
+unzip awscliv2.zip
+
+sudo ./aws/install
+
+aws --version
+
+=> Login to AWS CLI
+aws configure  # Enter AWS access key, secret, and region
+
+AWS Access Key ID [None]: 
+AWS Secret Access Key [None]: 
+Default region name [None]: ap-southeast-1
+Default output format [None]: json
+
+
+=> Create ECR Repository
+aws ecr create-repository --repository-name node-k8s-app
+
+=> Tag & Push Image
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+AWS_REGION=us-east-1
+ECR_URL="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
+
+# Authenticate Docker to AWS ECR
+aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_URL
+
+# Build and push the image
+docker build -t node-k8s-app .
+docker tag node-k8s-app:latest $ECR_URL/node-k8s-app:latest
+docker push $ECR_URL/node-k8s-app:latest
+
+=> Deploy App to Kubernetes
+
+Create Deployment YAML (deployment.yaml)
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-k8s-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-app
+  template:
+    metadata:
+      labels:
+        app: node-app
+    spec:
+      containers:
+        - name: node-app
+          image: <AWS_ECR_URL>/node-k8s-app:latest
+          ports:
+            - containerPort: 3000
+
+=> Apply Deployment
+
+kubectl apply -f deployment.yaml
+kubectl get pods
+
+=> Create Service YAML (service.yaml)
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: node-k8s-service
+spec:
+  selector:
+    app: node-app
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
+
+=> Apply Service
+
+kubectl apply -f service.yaml
+kubectl get services
+
+
+=> Get External IP
+
+kubectl get svc node-k8s-service
+
+=> Scaling & Monitoring
+
+=> Scale App to 4 Pods
+
+kubectl scale deployment node-k8s-app --replicas=4
+kubectl get pods
+
+=> Check Logs
+
+kubectl logs -f <POD_NAME>
+
+=> Check Resource Usage
+
+kubectl top pods
+
+=> Configure Ingress (Optional)
+
+=> Enable Ingress
+
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+
+=> Create Ingress (ingress.yaml)
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: node-app-ingress
+spec:
+  rules:
+    - host: your-domain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: node-k8s-service
+                port:
+                  number: 80
+
+=> Apply & Configure Domain
+
+kubectl apply -f ingress.yaml
+

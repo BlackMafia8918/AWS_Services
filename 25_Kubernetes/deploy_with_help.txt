@@ -1,0 +1,73 @@
+=> Deploy Node.js App Using Helm
+
+=> Install Helm on EC2
+
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
+helm version
+
+=> Create a Helm Chart
+
+helm create nodejs-app
+cd nodejs-app
+
+values.yaml
+
+image:
+  repository: your-dockerhub-username/node-k8s-app
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  port: 80
+
+templates/deployment.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ .Chart.Name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Chart.Name }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        ports:
+        - containerPort: 3000
+
+templates/service.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Chart.Name }}
+spec:
+  selector:
+    app: {{ .Chart.Name }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer
+
+
+=> Deploy App Using Helm
+
+helm install my-nodejs-app .
+kubectl get pods
+kubectl get services
+
+=> Get the External IP and Open in Browser:
+kubectl get svc my-nodejs-app
+
+
+
+

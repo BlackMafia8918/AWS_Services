@@ -1,0 +1,314 @@
+A Bash script is a plain text file containing a series of commands that can be executed by the Bash shell.
+Bash scripting plays a crucial role in automation, CI/CD, container orchestration, and infrastructure management. 
+
+1) myscript.sh
+
+Add the shebang (#!) and a simple command
+
+#!/bin/bash
+echo "Hello, World!"
+
+2) make it executable
+
+chmod +x myscript.sh
+
+3) Run
+
+./myscript.sh
+
+=> Variables and User Input
+
+4) Using Variables
+#!/bin/bash
+name="Amit"
+echo "Hello, $name! Kaise ho?"
+
+5) Reading User Input
+
+#!/bin/bash
+echo "Aapka naam kya hai?"
+read name
+echo "Swagat hai, $name ji!"
+
+=> Conditional Statements
+
+6) If-Else Example
+
+#!/bin/bash
+echo "Ek number daliye:"
+read num
+
+if [ $num -gt 50 ]; then
+    echo "Badhai ho! $num ek bada number hai."
+else
+    echo "Chhota number chuna gaya."
+fi
+
+7) Case Statement (Menu Example)
+
+#!/bin/bash
+echo "Aapka pasandida phal kya hai?"
+read fruit
+
+case $fruit in
+    aam) echo "Aam to rasila hota hai!" ;;
+    seb) echo "Seb swasthya ke liye achha hai." ;;
+    kela) echo "Kela energy deta hai!" ;;
+    *) echo "Yeh phal humare paas nahi hai." ;;
+esac
+
+=> Loops
+
+8) For Loop Example
+
+#!/bin/bash
+for name in Amit Priya Raj Sita; do
+    echo "Namaste, $name!"
+done
+
+9) While Loop Example
+
+#!/bin/bash
+count=1
+while [ $count -le 5 ]; do
+    echo "Ginti: $count"
+    ((count++))
+done
+
+=> Functions
+
+10) Simple Function
+
+#!/bin/bash
+namaste() {
+    echo "Namaste, $1 ji!"
+}
+
+namaste Amit
+namaste Sita
+
+
+=> Working with Files
+
+11) Checking If a File Exists
+
+#!/bin/bash
+file="data.txt"
+if [ -f "$file" ]; then
+    echo "$file mil gaya!"
+else
+    echo "$file nahi mila."
+fi
+
+12) Reading a File Line by Line
+
+#!/bin/bash
+while read line; do
+    echo "Padhai: $line"
+done < names.txt
+
+
+13) Command-Line Arguments
+
+#!/bin/bash
+echo "Script ka naam: $0"
+echo "Pehla argument: $1"
+echo "Doosra argument: $2"
+
+./myscript.sh Amit Priya
+
+=> Process Management
+
+14) Running a Background Process
+#!/bin/bash
+sleep 10 &
+echo "Process chalu ho gaya, PID: $!"
+
+15) Debugging a Bash Script
+
+bash -x myscript.sh
+
+or 
+
+#!/bin/bash
+set -x
+echo "Yeh debugging mode hai!"
+
+=> Working with Environment Variables
+Used for managing credentials, configurations, and dynamic parameters in Jenkins, Docker, and Kubernetes.
+
+16) Exporting Environment Variables
+
+#!/bin/bash
+export DOCKER_IMAGE="myapp:v1"
+export K8S_NAMESPACE="dev"
+
+echo "Deploying $DOCKER_IMAGE to $K8S_NAMESPACE"
+
+17) Using Environment Variables in a Script
+
+#!/bin/bash
+echo "Jenkins Home Directory: $JENKINS_HOME"
+echo "Current User: $USER"
+
+Usage in Jenkins:
+Jenkins pipelines use $JENKINS_HOME, $WORKSPACE, and custom environment variables.
+
+Usage in Docker:
+Docker images use ENV variables to pass runtime configurations.
+
+Usage in Kubernetes:
+Use ConfigMaps and Secrets to inject environment variables into containers.
+
+=> Automating Docker Tasks with Bash
+
+18) Building and Pushing Docker Images
+
+#!/bin/bash
+IMAGE_NAME="myapp"
+VERSION="v1"
+
+echo "Building Docker Image..."
+docker build -t $IMAGE_NAME:$VERSION .
+
+echo "Pushing Docker Image to Registry..."
+docker push $IMAGE_NAME:$VERSION
+
+echo "Deployment Ready: $IMAGE_NAME:$VERSION"
+
+----------------
+Usage in Jenkins:
+Use this script in a Jenkins job to automatically build and push Docker images.
+
+Usage in CI/CD:
+Can be executed as a step in GitHub Actions, GitLab CI/CD, or Jenkins pipelines.
+
+=> Managing Kubernetes Deployments
+
+19) Deploying to Kubernetes
+
+#!/bin/bash
+DEPLOYMENT_NAME="myapp"
+NAMESPACE="dev"
+
+echo "Applying Kubernetes Deployment..."
+kubectl apply -f deployment.yaml -n $NAMESPACE
+
+echo "Waiting for Pods to be Ready..."
+kubectl rollout status deployment/$DEPLOYMENT_NAME -n $NAMESPACE
+
+Usage in Jenkins:
+Integrate this into Jenkins pipelines to automate Kubernetes deployments.
+
+Usage in GitOps:
+Can be used with ArgoCD or FluxCD to automate deployments.
+
+20) Checking Service Status in Kubernetes
+
+#!/bin/bash
+SERVICE="myapp"
+NAMESPACE="dev"
+
+STATUS=$(kubectl get pods -n $NAMESPACE | grep $SERVICE | awk '{print $3}')
+
+if [[ "$STATUS" == "Running" ]]; then
+    echo "$SERVICE is running."
+else
+    echo "$SERVICE is NOT running."
+    exit 1
+fi
+
+Usage:
+
+Ensures that pods are healthy before proceeding with further steps.
+Helps in Jenkins pipelines to verify if the deployment was successful.
+
+21) Parallel Execution in Bash (Faster CI/CD)
+
+Run multiple tasks in parallel to speed up CI/CD pipelines.
+
+#!/bin/bash
+echo "Starting parallel tasks..."
+
+(task1 &)
+(task2 &)
+(task3 &)
+
+wait
+echo "All tasks completed."
+
+Example Use Case:
+
+Building multiple Docker images in parallel.
+Running tests on multiple Kubernetes pods at the same time.
+
+22) Error Handling in Bash
+
+Bash scripts in CI/CD should handle failures gracefully.
+
+Using set -e and trap for Error Handling
+
+#!/bin/bash
+set -e  # Exit script on error
+trap 'echo "Error occurred at line $LINENO"; exit 1' ERR
+
+echo "Building Docker image..."
+docker build -t myapp:v1 .
+echo "Done!"
+
+
+Prevents pipeline failures from going unnoticed.
+Ensures debugging is easier by printing error line numbers.
+
+23) Automating Jenkins Job Triggers
+
+#!/bin/bash
+JENKINS_URL="http://jenkins.local:8080/job/myjob/build"
+JENKINS_USER="admin"
+JENKINS_TOKEN="your_api_token"
+
+curl -X POST "$JENKINS_URL" --user "$JENKINS_USER:$JENKINS_TOKEN"
+
+Automates triggering of Jenkins jobs from another system or script.
+Useful for event-driven workflows.
+
+=> Monitoring Logs in Docker & Kubernetes
+
+24) Tail Docker Container Logs
+
+#!/bin/bash
+docker logs -f my_container
+
+25) Tail Kubernetes Pod Logs
+
+#!/bin/bash
+kubectl logs -f mypod -n dev
+
+
+Helps in debugging deployments.
+Can be integrated into alerting scripts.
+
+26) Automating Cleanup of Old Docker Images
+
+#!/bin/bash
+echo "Cleaning up old Docker images..."
+docker images | grep "myapp" | awk '{print $3}' | xargs docker rmi -f
+
+Prevents disk space issues in CI/CD environments.
+Used in Jenkins build agents to remove unused images.
+
+27) Automating Kubernetes Rollback
+
+#!/bin/bash
+DEPLOYMENT="myapp"
+NAMESPACE="dev"
+
+echo "Rolling back last deployment..."
+kubectl rollout undo deployment/$DEPLOYMENT -n $NAMESPACE
+
+
+Automatically rolls back deployments if a new release fails.
+Can be triggered on pipeline failure.
+
+
+

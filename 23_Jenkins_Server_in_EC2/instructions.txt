@@ -1,0 +1,41 @@
+Step 1 : create an EC2 machine with ssh, http, and Custom TCP with 8080 port open
+
+name : jenkins_server
+Ubuntu 24.04
+t2.micro
+Key : jenkins_secrets 
+12 GB Volume
+
+Step 2 : 
+Then ssh into EC2 machine 
+
+
+Step 3 : 
+sudo su
+
+sudo apt update
+
+// Install Java for Jenkins to run
+
+sudo apt install default-jdk 
+
+java -version
+
+sudo wget -O /usr/share/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key
+
+  
+echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc]" \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list > /dev/null
+
+sudo apt-get update
+sudo apt-get install jenkins
+
+sudo systemctl start jenkins
+
+Go to EC2 Public Url
+
+
+cat /var/lib/jenkins/secrets/initialAdminPassword
+
